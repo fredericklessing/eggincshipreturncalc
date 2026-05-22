@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Inc. Ship Return Calculator</title>
+    <link rel="icon" type="image/jpeg" href="https://eggincgame.com/image/stardust.jpg">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-image: url('');
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            filter: blur(25px) brightness(0.7);
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: var(--bg-image);
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            z-index: -1;
+        }
+
+        img {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .container {
+            background-color: #16213e;
+            border: 2px solid #f4a91f;
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 0 30px rgba(244, 169, 31, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #f4a91f;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: #0f3460;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: #f4a91f;
+        }
+
+        select option {
+            background-color: #0f3460;
+        }
+
+
+
+        .ship-selector {
+            margin-bottom: 20px;
+        }
+
+        .ship-selector-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .apply-ship-btn {
+            width: 100%;
+            padding: 9px;
+            background-color: #0f3460;
+            border: 1px solid #f4a91f;
+            border-radius: 8px;
+            color: #f4a91f;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .apply-ship-btn:hover {
+            background-color: #1a4a80;
+        }
+
+        .travel-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .travel-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .travel-row label {
+            font-size: 0.8rem;
+        }
+
+        .selected-duration {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: center;
+            min-height: 20px;
+            margin-top: 6px;
+        }
+
+        .selected-duration span {
+            color: #f4a91f;
+            font-weight: bold;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 12px;
+            background-color: #f4a91f;
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-calculate:hover {
+            background-color: #ffc233;
+        }
+
+        .btn-calculate:active {
+            transform: scale(0.98);
+        }
+
+        .result-box {
+            margin-top: 24px;
+            background-color: #0f3460;
+            border: 1px solid #f4a91f;
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+        }
+
+        .result-box.visible {
+            display: block;
+        }
+
+        .result-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-icon-box {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            border: 2px solid #f4a91f;
+            border-radius: 8px;
+            background-color: rgba(244, 169, 31, 0.1);
+        }
+
+        .result-icon {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
+
+        .result-time {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #f4a91f;
+            margin-bottom: 4px;
+        }
+
+        .result-date {
+            font-size: 1rem;
+            color: #ccc;
+            margin-bottom: 16px;
+        }
+
+        .result-duration {
+            font-size: 0.9rem;
+            color: #aaa;
+            border-top: 1px solid #333;
+            padding-top: 12px;
+        }
+
+        .result-duration span {
+            color: #e0e0e0;
+        }
+
+        .now-btn {
+            background: none;
+            border: none;
+            color: #f4a91f;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 10px;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .now-btn:hover {
+            color: #ffc233;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 1px solid #333;
+            margin: 20px 0;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tier-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            font-weight: bold;
+        }
+
+        .tier-short  { background: #2e5e2e; color: #7dff7d; }
+        .tier-long   { background: #5e3e2e; color: #ffb97d; }
+        .tier-epic   { background: #3e2e5e; color: #c97dff; }
+
+        .ship-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .ship-option-display {
+            display: flex;
+            align-items: center;
+        }
+
+        .selected-ship-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #0f3460;
+            border-radius: 8px;
+        }
+
+        .selected-ship-icon {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            margin-right: 8px;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        .ship-details-text {
+            flex: 0 1 auto;
+            text-align: center;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .fuel-requirements {
+            flex: 1;
+            margin-top: 0;
+            padding: 10px;
+            background-color: #0a1f35;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .ship-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .fuel-section-title {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .fuel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .fuel-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .fuel-item-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            width: 100%;
+        }
+
+        .fuel-item-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .fuel-amount {
+            font-weight: bold;
+            color: #f4a91f;
+            font-size: 0.95rem;
+        }
+
+        .fuel-name {
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 Ship Return Calculator</h1>
+    <p class="subtitle">Egg Inc. — Plan your missions before you launch</p>
+
+    <!-- Launch Time -->
+    <div class="form-group">
+        <label>
+            Launch Date &amp; Time
+            <button class="now-btn" onclick="setNow()">Use Now</button>
+        </label>
+        <input type="datetime-local" id="launchTime" step="1">
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Ship Selector -->
+    <div class="ship-selector">
+        <div class="section-title">Select Ship &amp; Mission Type</div>
+        <div class="ship-selector-row">
+            <div class="form-group" style="margin-bottom:0">
+                <label>Ship</label>
+                <select id="shipSelect" onchange="onShipChange()">
+                    <option value="">— Choose a ship —</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+                <label>Mission Type</label>
+                <select id="missionSelect" onchange="onMissionChange()">
+                    <option value="">— Choose mission —</option>
+                </select>
+            </div>
+        </div>
+        <div class="selected-duration" id="selectedDuration"></div>
+        <div class="selected-ship-info" id="selectedShipInfo" style="display:none;"></div>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- Manual Travel Time Fine-Tune -->
+    <div class="section-title">Travel Time (manual / fine-tune)</div>
+    <div class="travel-row">
+        <div class="form-group">
+            <label>Days</label>
+            <input type="number" id="days" min="0" value="0" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label>Hours</label>
+            <input type="number" id="hours" min="0" max="23" value="0" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label>Minutes</label>
+            <input type="number" id="minutes" min="0" max="59" value="0" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label>Seconds</label>
+            <input type="number" id="seconds" min="0" max="59" value="0" placeholder="0">
+        </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <button class="btn-calculate" onclick="calculate()">Calculate Return Time</button>
+
+    <!-- Result -->
+    <div class="result-box" id="resultBox">
+        <div class="result-content">
+            <div class="result-info">
+                <div class="result-label">🛬 Ship Returns At</div>
+                <div class="result-time" id="resultTime"></div>
+                <div class="result-date" id="resultDate"></div>
+                <div class="result-duration">
+                    Total travel duration: <span id="resultDuration"></span>
+                </div>
+            </div>
+            <div class="result-icon-box">
+                <img src="https://static.wikia.nocookie.net/egg-inc/images/7/72/Icon_afx_chest_3.png/revision/latest/scale-to-width-down/55?cb=20211024211857" alt="Reward" class="result-icon">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  SHIP DATA  — sourced from wasmegg-carpet.netlify.app/mission-list/
+//  Duration format: { d, h, m, s }
+//  Icons from: https://eggincassets.pages.dev/128/egginc/
+// ─────────────────────────────────────────────────────────────
+const SHIPS = [
+    {
+        name: "Chicken One",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_chicken_1.png",
+        missions: [
+            { type: "Short",  d:0, h:0,  m:20, s:0,  label:"Short  — 20m", fuels: [{egg:"rocketfuel", amount:"2M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}], virtueFuels: [{egg:"humility", amount:"5M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+            { type: "Long",   d:0, h:1,  m:0, s:0,  label:"Long   — 1h", fuels: [{egg:"rocketfuel", amount:"3M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}], virtueFuels: [{egg:"humility", amount:"10M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+            { type: "Extended",   d:0, h:2,  m:0,  s:0,  label:"Extended   — 2h", fuels: [{egg:"rocketfuel", amount:"10M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}], virtueFuels: [{egg:"humility", amount:"20M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+        ]
+    },
+    {
+        name: "Chicken Nine",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_chicken_9.png",
+        missions: [
+            { type: "Short",  d:0, h:0,  m:30, s:0,  label:"Short  — 30m", fuels: [{egg:"rocketfuel", amount:"10M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}], virtueFuels: [{egg:"humility", amount:"10M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+            { type: "Long",   d:0, h:1,  m:0,  s:0,  label:"Long   — 1h", fuels: [{egg:"rocketfuel", amount:"15M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}], virtueFuels: [{egg:"humility", amount:"20M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+            { type: "Extended",   d:0, h:3,  m:0,  s:0,  label:"Extended   — 3h", fuels: [{egg:"rocketfuel", amount:"25M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}], virtueFuels: [{egg:"humility", amount:"50M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+        ]
+    },
+    {
+        name: "Chicken Heavy",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_chicken_heavy.png",
+        missions: [
+            { type: "Short",  d:0, h:0,  m:45, s:0,  label:"Short  — 45m", fuels: [{egg:"rocketfuel", amount:"100M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}], virtueFuels: [{egg:"humility", amount:"50M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+            { type: "Long",   d:0, h:1,  m:30,  s:0,  label:"Long   — 1h 30m", fuels: [{egg:"rocketfuel", amount:"50M"}, {egg:"fusion", amount:"5M", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}], virtueFuels: [{egg:"humility", amount:"100M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+            { type: "Extended",   d:0, h:4,  m:0,  s:0,  label:"Extended   — 4h", fuels: [{egg:"rocketfuel", amount:"75M"}, {egg:"fusion", amount:"25M", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}], virtueFuels: [{egg:"humility", amount:"150M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}] },
+        ]
+    },
+    {
+        name: "BCR",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_bcr.png",
+        missions: [
+            { type: "Short",  d:0, h:1,  m:30,  s:0,  label:"Short  — 1h 30m", fuels: [{egg:"rocketfuel", amount:"250M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}, {egg:"fusion", amount:"50M", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}], virtueFuels: [{egg:"humility", amount:"100M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"10M", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+            { type: "Long",   d:0, h:4,  m:0,  s:0,  label:"Long   — 4h", fuels: [{egg:"rocketfuel", amount:"400M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}, {egg:"fusion", amount:"75M", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}], virtueFuels: [{egg:"humility", amount:"150M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"20M", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+            { type: "Extended",   d:0, h:8,  m:0,  s:0,  label:"Extended   — 8h", fuels: [{egg:"superfood", amount:"5M", icon:"https://eggincassets.pages.dev/64/egginc/egg_superfood.png"}, {egg:"rocketfuel", amount:"300M", icon:"https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png"}, {egg:"fusion", amount:"100M", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}], virtueFuels: [{egg:"humility", amount:"200M", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"30M", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+        ]
+    },
+    {
+        name: "Quintillion Chicken",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_millenium_chicken.png",
+        missions: [
+            { type: "Short",  d:0, h:1,  m:12,  s:0,  label:"Short  — 1h 12m", fuels: [{egg:"fusion", amount:"5B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"1B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"10B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"10B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+            { type: "Long",   d:0, h:2,  m:24,  s:0,  label:"Long   — 2h 24m", fuels: [{egg:"fusion", amount:"7B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"5B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"20B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"20B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+            { type: "Extended",   d:0, h:4,  m:48,  s:0,  label:"Extended   — 4h 48m", fuels: [{egg:"superfood", amount:"10M", icon:"https://eggincassets.pages.dev/64/egginc/egg_superfood.png"}, {egg:"fusion", amount:"10B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"15B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"50B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"50B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+        ]
+    },
+    {
+        name: "Cornish-Hen Corvette",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_corellihen_corvette.png",
+        missions: [
+            { type: "Short",  d:0, h:1,  m:36,  s:0,  label:"Short  — 1h 36m", fuels: [{egg:"fusion", amount:"15B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"2B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"20B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"5B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+            { type: "Long",   d:0, h:4,  m:48,  s:0,  label:"Long   — 4h 48m", fuels: [{egg:"fusion", amount:"20B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"3B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"40B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"8B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+            { type: "Extended",   d:0, h:9, m:36,  s:0,  label:"Extended   — 9h 36m", fuels: [{egg:"superfood", amount:"500M", icon:"https://eggincassets.pages.dev/64/egginc/egg_superfood.png"}, {egg:"fusion", amount:"25B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"5B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"70B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"10B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}] },
+        ]
+    },
+    {
+        name: "Galleggtica",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_galeggtica.png",
+        missions: [
+            { type: "Short",  d:0, h:2,  m:24,  s:0,  label:"Short  — 2h 24m", fuels: [{egg:"fusion", amount:"50B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"10B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"200B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"200B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}, {egg:"curiosity", amount:"200B", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}] },
+            { type: "Long",   d:0, h:6, m:24,  s:0,  label:"Long   — 6h 24m", fuels: [{egg:"fusion", amount:"75B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"25B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}], virtueFuels: [{egg:"humility", amount:"400B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"400B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}, {egg:"curiosity", amount:"400B", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}] },
+            { type: "Extended",   d:0, h:12,  m:0,  s:0,  label:"Extended   — 12h", fuels: [{egg:"fusion", amount:"100B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"graviton", amount:"50B", icon:"https://eggincassets.pages.dev/64/egginc/egg_graviton.png"}, {egg:"antimatter", amount:"1B", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"600B", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"integrity", amount:"600B", icon:"https://eggincassets.pages.dev/64/egginc/egg_integrity.png"}, {egg:"curiosity", amount:"600B", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}] },
+        ]
+    },
+    {
+        name: "Defihent",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_defihent.png",
+        missions: [
+            { type: "Short",  d:0, h:3,  m:12,  s:0,  label:"Short  — 3h 12m", fuels: [{egg:"dilithium", amount:"200B", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"50B", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"1T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"1T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"1T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+            { type: "Long",   d:0, h:9,  m:36,  s:0,  label:"Long   — 9h 36m", fuels: [{egg:"dilithium", amount:"250B", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"150B", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+            { type: "Extended",   d:0, h:19,  m:12,  s:0,  label:"Extended   — 19h 12m", fuels: [{egg:"fusion", amount:"25B", icon:"https://eggincassets.pages.dev/64/egginc/egg_fusion.png"}, {egg:"dilithium", amount:"250B", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"250B", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"1T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+        ]
+    },
+    {
+        name: "Voyegger",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_voyegger.png",
+        missions: [
+            { type: "Short",  d:0, h:4,  m:48,  s:0,  label:"Short  — 4h 48m", fuels: [{egg:"dilithium", amount:"1T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"1T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"5T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"10T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"5T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+            { type: "Long",   d:0, h:14,  m:24,  s:0,  label:"Long   — 14h 24m", fuels: [{egg:"dilithium", amount:"1.5T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"1.5T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"10T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"10T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+            { type: "Extended",   d:1, h:4,  m:48,  s:0,  label:"Extended   — 1d 4h 48m", fuels: [{egg:"tachyon", amount:"100B", icon:"https://eggincassets.pages.dev/64/egginc/egg_tachyon.png"}, {egg:"dilithium", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"15T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"25T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"15T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+        ]
+    },
+    {
+        name: "Henerprise",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_henerprise.png",
+        missions: [
+            { type: "Short",  d:0, h:9, m:36,  s:0,  label:"Short  — 9h 36m", fuels: [{egg:"dilithium", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}], virtueFuels: [{egg:"humility", amount:"10T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"15T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"10T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+            { type: "Long",   d:0, h:19,  m:12,  s:0,  label:"Long   — 19h 12m", fuels: [{egg:"dilithium", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"15T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"15T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}, {egg:"resilience", amount:"10T", icon:"https://eggincassets.pages.dev/64/egginc/egg_resilience.png"}] },
+            { type: "Extended",   d:1, h:14,  m:24,  s:0,  label:"Extended   — 1d 14h 24m", fuels: [{egg:"tachyon", amount:"1T", icon:"https://eggincassets.pages.dev/64/egginc/egg_tachyon.png"}, {egg:"dilithium", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"25T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"25T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"25T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}, {egg:"resilience", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_resilience.png"}] },
+        ]
+    },
+    {
+        name: "Atreggies Henliner",
+        icon: "https://eggincassets.pages.dev/128/egginc/afx_ship_atreggies.png",
+        missions: [
+            { type: "Short",  d:0, h:19, m:12,  s:0,  label:"Short  — 19h 12m", fuels: [{egg:"dilithium", amount:"4T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"4T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"25T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
+            { type: "Long",   d:1, h:4,  m:48,  s:0,  label:"Long   — 1d 4h 48m", fuels: [{egg:"dilithium", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"4T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"30T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"40T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"30T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}, {egg:"resilience", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_resilience.png"}] },
+            { type: "Extended",   d:1, h:14,  m:24,  s:0,  label:"Extended   — 1d 14h 24m", fuels: [{egg:"tachyon", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_tachyon.png"}, {egg:"dilithium", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"75T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"50T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"75T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}, {egg:"resilience", amount:"40T", icon:"https://eggincassets.pages.dev/64/egginc/egg_resilience.png"}] },
+        ]
+    },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  Build ship dropdown on load
+// ─────────────────────────────────────────────────────────────
+function buildShipDropdown() {
+    const sel = document.getElementById('shipSelect');
+    SHIPS.forEach((ship, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = ship.name;
+        sel.appendChild(opt);
+    });
+}
+
+function onShipChange() {
+    const shipIdx = document.getElementById('shipSelect').value;
+    const missionSel = document.getElementById('missionSelect');
+    missionSel.innerHTML = '<option value="">— Choose mission —</option>';
+    document.getElementById('selectedDuration').innerHTML = '';
+
+    if (shipIdx === '') return;
+
+    const ship = SHIPS[shipIdx];
+    ship.missions.forEach((m, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        const tierClass = m.type === 'Short' ? 'Short' : m.type === 'Long' ? 'Long' : 'Epic';
+        opt.textContent = m.label;
+        opt.dataset.tier = tierClass;
+        missionSel.appendChild(opt);
+    });
+}
+
+function onMissionChange() {
+    const shipIdx    = document.getElementById('shipSelect').value;
+    const missionIdx = document.getElementById('missionSelect').value;
+    const durEl      = document.getElementById('selectedDuration');
+    const infoEl     = document.getElementById('selectedShipInfo');
+
+    if (shipIdx === '' || missionIdx === '') {
+        durEl.innerHTML = '';
+        infoEl.style.display = 'none';
+        return;
+    }
+
+    const ship = SHIPS[shipIdx];
+    const m = ship.missions[missionIdx];
+    const parts = [];
+    if (m.d > 0) parts.push(`${m.d}d`);
+    if (m.h > 0) parts.push(`${m.h}h`);
+    if (m.m > 0) parts.push(`${m.m}m`);
+    if (m.s > 0) parts.push(`${m.s}s`);
+    const dStr = parts.join(' ') || '0s';
+
+    durEl.innerHTML = `${ship.name} — ${m.type}: <span>${dStr}</span>`;
+    
+    // Auto-apply travel time
+    document.getElementById('days').value    = m.d;
+    document.getElementById('hours').value   = m.h;
+    document.getElementById('minutes').value = m.m;
+    document.getElementById('seconds').value = m.s;
+    
+    // Display ship icon and mission-specific fuel info with egg type icons and readable names
+    if (ship.icon) {
+        // Friendly display names for egg keys
+        const EGG_DISPLAY = {
+            rocketfuel: 'Rocket Fuel Eggs',
+            fusion: 'Fusion Eggs',
+            graviton: 'Graviton Eggs',
+            dilithium: 'Dilithium Eggs',
+            antimatter: 'Antimatter Eggs',
+            darkmatter: 'Dark Matter Eggs',
+            humility: 'Humility Eggs',
+            integrity: 'Integrity Eggs',
+            curiosity: 'Curiosity Eggs',
+            kindness: 'Kindness Eggs',
+            tachyon: 'Tachyon Eggs'
+        };
+
+        const makeLabel = (eggKey) => {
+            if (!eggKey) return '';
+            return EGG_DISPLAY[eggKey] || (eggKey.charAt(0).toUpperCase() + eggKey.slice(1) + ' Eggs');
+        };
+
+        let fuelHTML = '';
+
+        if (m.fuels && m.fuels.length > 0) {
+            fuelHTML += '<div class="fuel-requirements"><span class="fuel-section-title">⛽ Fuel Required</span><div class="fuel-grid">';
+            m.fuels.forEach(f => {
+                const name = makeLabel(f.egg);
+                fuelHTML += `<div class="fuel-item"><div class="fuel-item-header"><img src="${f.icon}" alt="${f.egg}" class="fuel-item-icon"><span class="fuel-amount">${f.amount}</span></div><div class="fuel-name">${name}</div></div>`;
+            });
+            fuelHTML += '</div></div>';
+        }
+
+        if (m.virtueFuels && m.virtueFuels.length > 0) {
+            fuelHTML += '<div class="fuel-requirements"><span class="fuel-section-title">✨ Virtue Fuel</span><div class="fuel-grid">';
+            m.virtueFuels.forEach(f => {
+                const name = makeLabel(f.egg);
+                fuelHTML += `<div class="fuel-item"><div class="fuel-item-header"><img src="${f.icon}" alt="${f.egg}" class="fuel-item-icon"><span class="fuel-amount">${f.amount}</span></div><div class="fuel-name">${name}</div></div>`;
+            });
+            fuelHTML += '</div></div>';
+        }
+
+        infoEl.innerHTML = `<div class="ship-title-row"><img src="${ship.icon}" alt="${ship.name}" class="selected-ship-icon" onerror="this.style.display='none'"><strong>${ship.name}</strong></div><small style="margin-bottom: 8px;">${m.type}: ${dStr}</small><div class="ship-details-text">${fuelHTML}</div>`;
+        infoEl.style.display = 'flex';
+    }
+}
+
+function applyShipTime() {
+    const shipIdx    = document.getElementById('shipSelect').value;
+    const missionIdx = document.getElementById('missionSelect').value;
+
+    if (shipIdx === '' || missionIdx === '') {
+        alert('Please select a ship and mission type first.');
+        return;
+    }
+
+    const m = SHIPS[shipIdx].missions[missionIdx];
+    document.getElementById('days').value    = m.d;
+    document.getElementById('hours').value   = m.h;
+    document.getElementById('minutes').value = m.m;
+    document.getElementById('seconds').value = m.s;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Core calculator logic
+// ─────────────────────────────────────────────────────────────
+function setNow() {
+    document.getElementById('launchTime').value = toLocalInputString(new Date());
+}
+
+function toLocalInputString(date) {
+    const pad = n => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+function calculate() {
+    const launchVal = document.getElementById('launchTime').value;
+    if (!launchVal) {
+        alert('Please enter a launch date and time.');
+        return;
+    }
+
+    const launch  = new Date(launchVal);
+    const days    = parseInt(document.getElementById('days').value)    || 0;
+    const hours   = parseInt(document.getElementById('hours').value)   || 0;
+    const minutes = parseInt(document.getElementById('minutes').value) || 0;
+    const seconds = parseInt(document.getElementById('seconds').value) || 0;
+
+    const totalSeconds = (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
+
+    if (totalSeconds <= 0) {
+        alert('Please enter a travel time greater than zero.');
+        return;
+    }
+
+    const returnTime = new Date(launch.getTime() + totalSeconds * 1000);
+
+    const timeStr = returnTime.toLocaleTimeString([], {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    const dateStr = returnTime.toLocaleDateString([], {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    document.getElementById('resultTime').textContent     = timeStr;
+    document.getElementById('resultDate').textContent     = dateStr;
+    document.getElementById('resultDuration').textContent = buildDurationString(days, hours, minutes, seconds);
+
+    document.getElementById('resultBox').classList.add('visible');
+}
+
+function buildDurationString(d, h, m, s) {
+    const parts = [];
+    if (d > 0) parts.push(`${d}d`);
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    if (s > 0) parts.push(`${s}s`);
+    return parts.length ? parts.join(' ') : '0s';
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Random background image
+// ─────────────────────────────────────────────────────────────
+const BACKGROUND_IMAGES = [
+    'https://eggincgame.com/image/egg-farm.jpg',
+    'https://eggincgame.com/image/harvest-fest.jpg',
+    'https://eggincgame.com/image/rocket-egg.jpg',
+    'https://eggincgame.com/image/space-race.jpg',
+    'https://eggincgame.com/image/banner.jpg',
+    'https://eggincgame.com/image/community.jpg',
+    'https://eggincgame.com/image/cosmic.jpg',
+    'https://eggincgame.com/image/tachyon-egg.jpg'
+];
+
+function setRandomBackground() {
+    const randomImage = BACKGROUND_IMAGES[Math.floor(Math.random() * BACKGROUND_IMAGES.length)];
+    document.documentElement.style.setProperty('--bg-image', `url('${randomImage}')`);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Init
+// ─────────────────────────────────────────────────────────────
+setRandomBackground();
+buildShipDropdown();
+setNow();
+</script>
+
+</body>
+</html>
