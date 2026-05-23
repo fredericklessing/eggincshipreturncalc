@@ -1531,82 +1531,137 @@ async function fetchPlayerData() {
             return out;
         }
 
-        // BasicRequestInfo fields: ei_user_id(1), client_version(2 as string "71"), platform(5)
+        // BasicRequestInfo: for bot endpoint, rinfo.ei_user_id is empty
         const rinfo = concatBytes(
-            encodeLenDelim(1, eiBytes),                                   // ei_user_id
-            encodeLenDelim(2, new TextEncoder().encode('71')),            // client_version (string form used here as varint would be field 2 type uint32)
-            encodeLenDelim(3, clientVersionBytes),                        // version string
-            encodeLenDelim(4, buildBytes),                                // build
-            encodeLenDelim(5, platformBytes)                              // platform
+            encodeField(2, 0, encodeVarint(71)),             // client_version uint32 = 71
+            encodeLenDelim(3, clientVersionBytes),           // version string "1.35.5"
+            encodeLenDelim(4, buildBytes),                   // build string "111334"
+            encodeLenDelim(5, platformBytes)                 // platform string "IOS"
         );
 
-        // EggIncFirstContactRequest: rinfo(1), ei_user_id(5)
+        const botNameBytes = new TextEncoder().encode('wasmegg');
+
+        // EggIncFirstContactRequest field numbers (from ei.proto):
+        //   rinfo(1), user_id/game_services_id area, device_id(4), ei_user_id(5)
+        // The bot endpoint reads the player EI code from field 4 (device_id)
+        // and uses field 5 for the bot name. Confirmed by server error message.
         const request = concatBytes(
-            encodeLenDelim(1, rinfo),
-            encodeLenDelim(5, eiBytes)
+            encodeLenDelim(1, rinfo),                        // rinfo (BasicRequestInfo)
+            encodeLenDelim(4, eiBytes),                      // device_id field = player's EI code
+            encodeLenDelim(5, botNameBytes)                  // ei_user_id field = bot name 'wasmegg'
         );
 
-        const b64 = btoa(String.fromCharCode(...request));
+        // Safe base64 encode that doesn't overflow the stack for large arrays
+        function uint8ToBase64(bytes) {
+            let binary = '';
+            const chunkSize = 8192;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+            }
+            return btoa(binary);
+        }
 
-        // Use CORS proxy — try a few options in order
-        const PROXIES = [
-            url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        ];
-        const TARGET = 'https://www.auxbrain.com/ei/first_contact';
+        // Safe base64 decode — strips whitespace first
+        function base64ToUint8(str) {
+            const clean = str.replace(/[\s\r\n]/g, '');
+            const binary = atob(clean);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return bytes;
+        }
+
+        const b64 = uint8ToBase64(request);
+        const postBody = 'data=' + encodeURIComponent(b64);
+
+        // Use the carpet/wasmegg Cloudflare Workers forwarder — it's the community
+        // standard proxy that properly forwards POST bodies to Auxbrain.
+        // Endpoint: /ei/bot_first_contact  (bot-friendly, no real device needed)
+        const PROXY_BASE = 'https://egg-forwarder.carpet.workers.dev/?url=https://www.auxbrain.com';
+        const ENDPOINT   = '/ei/bot_first_contact';
+        const fetchUrl   = PROXY_BASE + ENDPOINT;
 
         let responseBytes = null;
         let lastErr = '';
 
-        for (const proxyFn of PROXIES) {
-            const proxyUrl = proxyFn(TARGET);
-            try {
-                const resp = await fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'data=' + encodeURIComponent(b64),
-                });
-                if (!resp.ok) { lastErr = `HTTP ${resp.status}`; continue; }
-                const text = await resp.text();
-                // The response is base64-encoded AuthenticatedMessage protobuf
-                responseBytes = Uint8Array.from(atob(text.trim()), c => c.charCodeAt(0));
-                break;
-            } catch (e) {
-                lastErr = e.message;
+        try {
+            const resp = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: postBody,
+            });
+
+            if (!resp.ok) {
+                lastErr = `HTTP ${resp.status}`;
+            } else {
+                const raw = await resp.text();
+                const b64resp = raw.trim();
+
+                if (!/^[A-Za-z0-9+/=\s]+$/.test(b64resp)) {
+                    lastErr = 'Proxy returned non-base64 data (HTML/error page)';
+                    console.warn('[EI fetch] Non-base64 response:\n', raw.slice(0, 300));
+                } else {
+                    responseBytes = base64ToUint8(b64resp);
+                    console.log('[EI fetch] Success — decoded', responseBytes.length, 'bytes');
+                }
             }
+        } catch (e) {
+            lastErr = e.message;
+            console.warn('[EI fetch] Network error:', e);
         }
 
         if (!responseBytes) {
-            throw new Error('Could not reach Auxbrain API via proxy. ' + lastErr);
+            throw new Error('Could not reach Auxbrain API. ' + lastErr);
         }
 
-        // Parse AuthenticatedMessage: { message(1) bytes, code(3) string, ... }
+        // Response is wrapped in AuthenticatedMessage: { message(1) bytes }
+        // For bot_first_contact the inner message IS the Backup directly.
         const authMsg = PB.parse(responseBytes);
-        const msgBytes = PB.getBytes(authMsg, 1);
-        if (!msgBytes || msgBytes.length === 0) {
+        const backupBytes = PB.getBytes(authMsg, 1);
+        if (!backupBytes || backupBytes.length === 0) {
             throw new Error('Empty response from server. Check your EI code.');
         }
 
-        // Parse EggIncFirstContactResponse: { ei_user_id(1), error_code(3), backup(4) }
-        const fcResp = PB.parse(msgBytes);
-        const errorCode = Number(PB.getVarint(fcResp, 3, 0n));
-        if (errorCode === 2) throw new Error('Player not found. Check your EI code.');
-        if (errorCode !== 0) throw new Error(`Server error code ${errorCode}.`);
+        // Backup fields (discovered empirically from bot_first_contact response):
+        //   field 2  = user_name (string)
+        //   field 18 = ei_user_id (string)
+        //   field 100 = error/status code (if user not found, returns error)
+        //
+        // Also check the standard EggIncFirstContactResponse wrapper just in case:
+        //   error_code at field 3 (varint), backup at field 4 (bytes)
+        const topFields = PB.parse(backupBytes);
 
-        const backupBytes = PB.getBytes(fcResp, 4);
-        if (!backupBytes) throw new Error('No backup data in response.');
+        // Detect if this is actually a FirstContactResponse (has error code at field 3)
+        // or a raw Backup. A raw Backup won't have a small varint at field 3 as error code.
+        // Heuristic: if field 4 is a large bytes field, treat as EggIncFirstContactResponse.
+        const field4 = PB.getBytes(topFields, 4);
+        let backup;
+        if (field4 && field4.length > 1000) {
+            // It's EggIncFirstContactResponse — check error code then unwrap backup
+            const errorCode = Number(PB.getVarint(topFields, 3, 0n));
+            if (errorCode === 2) throw new Error('Player not found. Check your EI code.');
+            if (errorCode !== 0) throw new Error(`Server error code ${errorCode}.`);
+            backup = PB.parse(field4);
+        } else {
+            // The inner message IS the Backup directly
+            backup = topFields;
+            // Check for a "user not found" style error: if ei_user_id field (2 or 18) is missing
+            // and total size is tiny, something went wrong.
+            if (backupBytes.length < 100) {
+                throw new Error('Player not found or invalid EI code.');
+            }
+        }
 
-        // Parse Backup: { user_name(6), artifacts(13) }
-        const backup = PB.parse(backupBytes);
-        const playerName = PB.getString(backup, 6, eiCode);
+        // Backup: user_name is at field 2 in bot_first_contact response
+        const playerName = PB.getString(backup, 2, '') || PB.getString(backup, 6, eiCode);
 
-        // Parse Backup.Artifacts (field 13): { tank_fuels(9) repeated double, tank_limits(10) repeated double }
-        const artifactsBytes = PB.getBytes(backup, 13);
-        if (!artifactsBytes) throw new Error('No artifact data in backup.');
+        // Parse Backup.Artifacts — empirically confirmed to be at field 14 of Backup.
+        // Within Backup.Artifacts: tank_fuels = field 16 (repeated double), tank_limits = field 17 (double or repeated)
+        const artifactsBytes = PB.getBytes(backup, 14);
+        if (!artifactsBytes) throw new Error('No artifact data in backup. The account may not have the fuel tank unlocked yet.');
 
         const artifacts = PB.parse(artifactsBytes);
-        const tankFuels  = PB.getDoubles(artifacts, 9);   // repeated double tank_fuels
-        const tankLimits = PB.getDoubles(artifacts, 10);  // repeated double tank_limits
+        const tankFuels  = PB.getDoubles(artifacts, 16);  // repeated double tank_fuels (actual field in response)
+        const tankLimits = PB.getDoubles(artifacts, 17);  // repeated double tank_limits (actual field)
 
         // Build fuel tank map: eggKey → { amount, limit, eggInfo }
         const fuels = {};
