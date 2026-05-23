@@ -1573,40 +1573,40 @@ async function fetchPlayerData() {
         const b64 = uint8ToBase64(request);
         const postBody = 'data=' + encodeURIComponent(b64);
 
-        // Use the carpet/wasmegg Cloudflare Workers forwarder — it's the community
-        // standard proxy that properly forwards POST bodies to Auxbrain.
-        // Endpoint: /ei/bot_first_contact  (bot-friendly, no real device needed)
-        const PROXY_BASE = 'https://egg-forwarder.carpet.workers.dev/?url=https://www.auxbrain.com';
-        const ENDPOINT   = '/ei/bot_first_contact';
-        const fetchUrl   = PROXY_BASE + ENDPOINT;
+        // Try multiple public CORS proxies that support POST, in order.
+        // Endpoint: /ei/bot_first_contact  (bot-friendly read-only lookup)
+        const TARGET = 'https://www.auxbrain.com/ei/bot_first_contact';
+        const PROXIES = [
+            `https://corsproxy.io/?url=${encodeURIComponent(TARGET)}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(TARGET)}`,
+            `https://thingproxy.freeboard.io/fetch/${TARGET}`,
+        ];
 
         let responseBytes = null;
         let lastErr = '';
 
-        try {
-            const resp = await fetch(fetchUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: postBody,
-            });
-
-            if (!resp.ok) {
-                lastErr = `HTTP ${resp.status}`;
-            } else {
+        for (const fetchUrl of PROXIES) {
+            try {
+                const resp = await fetch(fetchUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: postBody,
+                });
+                if (!resp.ok) { lastErr = `HTTP ${resp.status}`; continue; }
                 const raw = await resp.text();
                 const b64resp = raw.trim();
-
                 if (!/^[A-Za-z0-9+/=\s]+$/.test(b64resp)) {
-                    lastErr = 'Proxy returned non-base64 data (HTML/error page)';
-                    console.warn('[EI fetch] Non-base64 response:\n', raw.slice(0, 300));
-                } else {
-                    responseBytes = base64ToUint8(b64resp);
-                    console.log('[EI fetch] Success — decoded', responseBytes.length, 'bytes');
+                    lastErr = 'Non-base64 response';
+                    console.warn('[EI fetch] Bad response from', fetchUrl, raw.slice(0, 200));
+                    continue;
                 }
+                responseBytes = base64ToUint8(b64resp);
+                console.log('[EI fetch] Success via', fetchUrl, '—', responseBytes.length, 'bytes');
+                break;
+            } catch (e) {
+                lastErr = e.message;
+                console.warn('[EI fetch] Failed:', fetchUrl, e.message);
             }
-        } catch (e) {
-            lastErr = e.message;
-            console.warn('[EI fetch] Network error:', e);
         }
 
         if (!responseBytes) {
