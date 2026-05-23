@@ -699,7 +699,7 @@
 
     <!-- EI Player Lookup -->
     <hr class="section-divider" style="margin-top:0;">
-    <div class="section-title">🔍 Player Fuel Tank (Optional)</div>
+    <div class="section-title">🔍 Player Fuel Tank (Optional - Use at own risk!!)</div>
     <div class="ei-lookup-section">
         <div class="ei-input-row">
             <input type="text" id="eiCode" placeholder="EI1234567890123456" maxlength="20" spellcheck="false" autocomplete="off">
@@ -953,7 +953,7 @@ const SHIPS = [
         missions: [
             { type: "Short",  d:2, h:0, m:0,  s:0,  label:"Short", capacity: 60, capacityBumpPerStar: 7, fuels: [{egg:"dilithium", amount:"4T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"4T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"3T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"25T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}] },
             { type: "Standard",   d:3, h:0,  m:0,  s:0,  label:"Standard", capacity: 78, capacityBumpPerStar: 8, fuels: [{egg:"dilithium", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"4T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"30T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"40T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"30T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}, {egg:"resilience", amount:"20T", icon:"https://eggincassets.pages.dev/64/egginc/egg_resilience.png"}] },
-            { type: "Extended",   d:4, h:0,  m:0,  s:0,  label:"Extended", capacity: 86, capacityBumpPerStar: 10, fuels: [{egg:"tachyon", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_tachyon.png"}, {egg:"dilithium", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"75T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"50T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"75T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}, {egg:"resilience", amount:"40T", icon:"https://eggincassets.pages.dev/64/egginc/egg_resilience.png"}] },
+            { type: "Extended",   d:4, h:0,  m:0,  s:0,  label:"Extended", capacity: 86, capacityBumpPerStar: 10, fuels: [{egg:"tachyon", amount:"2T", icon:"https://eggincassets.pages.dev/64/egginc/egg_tachyon.png"}, {egg:"dilithium", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_dilithium.png"}, {egg:"antimatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_antimatter.png"}, {egg:"darkmatter", amount:"6T", icon:"https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png"}], virtueFuels: [{egg:"humility", amount:"75T", icon:"https://eggincassets.pages.dev/64/egginc/egg_humility.png"}, {egg:"curiosity", amount:"50T", icon:"https://eggincassets.pages.dev/64/egginc/egg_curiosity.png"}, {egg:"kindness", amount:"75T", icon:"https://eggincassets.pages.dev/64/egginc/egg_kindness.png"}, {egg:"resilience", amount:"40T", icon:"https://eggincassets.pages.dev/64/egginc/egg_resilience.png"}] },
         ]
     },
 ];
@@ -1707,7 +1707,7 @@ function renderTankDisplay() {
         if (!info) return;
         const amount = fuels[info.key] || 0;
         const limit  = limits[info.key] || 0;
-        if (limit === 0 && amount === 0) return; // skip untracked eggs
+        if (amount === 0) return; // skip empty slots
 
         const pct = limit > 0 ? Math.min(100, (amount / limit) * 100) : 0;
         const card = document.createElement('div');
