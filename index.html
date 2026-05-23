@@ -502,6 +502,193 @@
             color: #aaa;
             font-size: 0.8rem;
         }
+
+        /* ── Player EI Lookup ── */
+        .ei-lookup-section {
+            background-color: #0a1f35;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .ei-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ei-input-row input {
+            flex: 1;
+            font-family: monospace;
+            letter-spacing: 0.04em;
+        }
+
+        .btn-fetch-ei {
+            padding: 10px 16px;
+            background-color: #f4a91f;
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .btn-fetch-ei:hover { background-color: #ffc233; }
+        .btn-fetch-ei:disabled { background-color: #7a6010; cursor: not-allowed; color: #555; }
+
+        .ei-status {
+            font-size: 0.82rem;
+            margin-top: 8px;
+            min-height: 18px;
+            color: #aaa;
+        }
+        .ei-status.error   { color: #ff6b6b; }
+        .ei-status.success { color: #6bff9e; }
+        .ei-status.loading { color: #f4a91f; }
+
+        .tank-display {
+            margin-top: 14px;
+            display: none;
+        }
+
+        .tank-display.visible { display: block; }
+
+        .tank-player-name {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #f4a91f;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .tank-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .tank-egg-card {
+            background-color: #16213e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .tank-egg-card.has-fuel {
+            border-color: #f4a91f44;
+        }
+
+        .tank-egg-card img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-bottom: 4px;
+        }
+
+        .tank-egg-amount {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #f4a91f;
+        }
+
+        .tank-egg-limit {
+            font-size: 0.72rem;
+            color: #666;
+        }
+
+        .tank-egg-name {
+            font-size: 0.72rem;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .tank-fill-bar-wrap {
+            width: 100%;
+            height: 4px;
+            background: #0a1f35;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .tank-fill-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #f4a91f, #ffc233);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        .mission-count-box {
+            background-color: #16213e;
+            border: 1px solid #f4a91f44;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .mission-count-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+
+        .mission-count-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f4a91f;
+            line-height: 1.1;
+        }
+
+        .mission-count-sub {
+            font-size: 0.78rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .mission-fuel-breakdown {
+            margin-top: 10px;
+            font-size: 0.82rem;
+            color: #aaa;
+        }
+
+        .mission-fuel-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 3px 0;
+            border-bottom: 1px solid #1e2e44;
+        }
+
+        .mission-fuel-row:last-child { border-bottom: none; }
+
+        .mission-fuel-egg {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mission-fuel-egg img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+
+        .mission-fuel-limiting {
+            color: #ff6b6b;
+            font-size: 0.75rem;
+        }
+
+        .mission-fuel-ok {
+            color: #6bff9e;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 <body>
@@ -509,6 +696,29 @@
 <div class="container">
     <h1>🚀 Ship Return Calculator</h1>
     <p class="subtitle">Egg Inc. — Plan your missions before you launch</p>
+
+    <!-- EI Player Lookup -->
+    <hr class="section-divider" style="margin-top:0;">
+    <div class="section-title">🔍 Player Fuel Tank (Optional)</div>
+    <div class="ei-lookup-section">
+        <div class="ei-input-row">
+            <input type="text" id="eiCode" placeholder="EI1234567890123456" maxlength="20" spellcheck="false" autocomplete="off">
+            <button class="btn-fetch-ei" id="fetchEiBtn" onclick="fetchPlayerData()">Fetch</button>
+        </div>
+        <div class="ei-status" id="eiStatus">Enter your EI code to load your fuel tank status.</div>
+        <div class="tank-display" id="tankDisplay">
+            <div class="tank-player-name" id="tankPlayerName"></div>
+            <div class="tank-grid" id="tankGrid"></div>
+            <div class="mission-count-box" id="missionCountBox" style="display:none;">
+                <div class="mission-count-label">🚀 Estimated Launchable Ships</div>
+                <div class="mission-count-value" id="missionCountValue">—</div>
+                <div class="mission-count-sub" id="missionCountSub"></div>
+                <div class="mission-fuel-breakdown" id="missionFuelBreakdown"></div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="section-divider">
 
     <!-- Launch Time -->
     <div class="form-group">
@@ -897,6 +1107,9 @@ function onMissionChange() {
             <div class="ship-details-text">${fuelHTML}</div>`;
         infoEl.style.display = 'flex';
     }
+
+    // Recalculate tank mission count whenever ship/mission changes
+    updateMissionCountFromTank();
 }
 
 function onFTLFullyResearched() {
@@ -1061,6 +1274,459 @@ const BACKGROUND_IMAGES = [
 function setRandomBackground() {
     const randomImage = BACKGROUND_IMAGES[Math.floor(Math.random() * BACKGROUND_IMAGES.length)];
     document.documentElement.style.setProperty('--bg-image', `url('${randomImage}')`);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EGG TYPE MAP  (protobuf enum value → display info)
+//  Source: ei.proto  Egg enum
+// ─────────────────────────────────────────────────────────────
+const EGG_TANK_MAP = {
+    1:  { key: 'edible',       name: 'Edible',       icon: 'https://eggincassets.pages.dev/64/egginc/egg_edible.png' },
+    2:  { key: 'superfood',    name: 'Superfood',    icon: 'https://eggincassets.pages.dev/64/egginc/egg_superfood.png' },
+    3:  { key: 'medical',      name: 'Medical',      icon: 'https://eggincassets.pages.dev/64/egginc/egg_medical.png' },
+    4:  { key: 'rocketfuel',   name: 'Rocket Fuel',  icon: 'https://eggincassets.pages.dev/64/egginc/egg_rocketfuel.png' },
+    5:  { key: 'supermaterial',name: 'Super Material',icon:'https://eggincassets.pages.dev/64/egginc/egg_supermaterial.png'},
+    6:  { key: 'fusion',       name: 'Fusion',       icon: 'https://eggincassets.pages.dev/64/egginc/egg_fusion.png' },
+    7:  { key: 'quantum',      name: 'Quantum',      icon: 'https://eggincassets.pages.dev/64/egginc/egg_quantum.png' },
+    8:  { key: 'immortality',  name: 'Immortality',  icon: 'https://eggincassets.pages.dev/64/egginc/egg_immortality.png' },
+    9:  { key: 'tachyon',      name: 'Tachyon',      icon: 'https://eggincassets.pages.dev/64/egginc/egg_tachyon.png' },
+    10: { key: 'graviton',     name: 'Graviton',     icon: 'https://eggincassets.pages.dev/64/egginc/egg_graviton.png' },
+    11: { key: 'dilithium',    name: 'Dilithium',    icon: 'https://eggincassets.pages.dev/64/egginc/egg_dilithium.png' },
+    12: { key: 'prodigy',      name: 'Prodigy',      icon: 'https://eggincassets.pages.dev/64/egginc/egg_prodigy.png' },
+    13: { key: 'terraform',    name: 'Terraform',    icon: 'https://eggincassets.pages.dev/64/egginc/egg_terraform.png' },
+    14: { key: 'antimatter',   name: 'Antimatter',   icon: 'https://eggincassets.pages.dev/64/egginc/egg_antimatter.png' },
+    15: { key: 'darkmatter',   name: 'Dark Matter',  icon: 'https://eggincassets.pages.dev/64/egginc/egg_darkmatter.png' },
+    16: { key: 'ai',           name: 'AI',           icon: 'https://eggincassets.pages.dev/64/egginc/egg_ai.png' },
+    17: { key: 'nebula',       name: 'Nebula',       icon: 'https://eggincassets.pages.dev/64/egginc/egg_nebula.png' },
+    18: { key: 'universe',     name: 'Universe',     icon: 'https://eggincassets.pages.dev/64/egginc/egg_universe.png' },
+    19: { key: 'enlightenment',name: 'Enlightenment',icon: 'https://eggincassets.pages.dev/64/egginc/egg_enlightenment.png' },
+    50: { key: 'curiosity',    name: 'Curiosity',    icon: 'https://eggincassets.pages.dev/64/egginc/egg_curiosity.png' },
+    51: { key: 'integrity',    name: 'Integrity',    icon: 'https://eggincassets.pages.dev/64/egginc/egg_integrity.png' },
+    52: { key: 'humility',     name: 'Humility',     icon: 'https://eggincassets.pages.dev/64/egginc/egg_humility.png' },
+    53: { key: 'resilience',   name: 'Resilience',   icon: 'https://eggincassets.pages.dev/64/egginc/egg_resilience.png' },
+    54: { key: 'kindness',     name: 'Kindness',     icon: 'https://eggincassets.pages.dev/64/egginc/egg_kindness.png' },
+};
+
+// The tank_fuels / tank_limits arrays are indexed by (egg_enum_value - 1)
+// i.e. index 0 = EDIBLE(1), index 1 = SUPERFOOD(2), ... etc.
+// Egg enum values 1-19 are contiguous; virtue eggs start at 50.
+// In practice Auxbrain stores them packed so we must use the order carefully.
+// Based on community research the array is ordered by egg enum value ascending:
+// [edible=1, superfood=2, medical=3, rocketfuel=4, supermaterial=5, fusion=6,
+//  quantum=7, immortality=8, tachyon=9, graviton=10, dilithium=11, prodigy=12,
+//  terraform=13, antimatter=14, darkmatter=15, ai=16, nebula=17, universe=18,
+//  enlightenment=19, curiosity=50, integrity=51, humility=52, resilience=53, kindness=54]
+const TANK_EGG_ORDER = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,50,51,52,53,54];
+
+// ─────────────────────────────────────────────────────────────
+//  MINIMAL PROTOBUF DECODER  (varint, length-delimited, float64)
+//  Only what we need: field numbers, doubles, strings, nested msgs
+// ─────────────────────────────────────────────────────────────
+const PB = {
+    // Decode a varint from a Uint8Array starting at offset, returns {value: BigInt, offset}
+    readVarint(buf, offset) {
+        let result = 0n, shift = 0n;
+        while (offset < buf.length) {
+            const byte = buf[offset++];
+            result |= BigInt(byte & 0x7F) << shift;
+            if ((byte & 0x80) === 0) break;
+            shift += 7n;
+        }
+        return { value: result, offset };
+    },
+
+    // Decode a 64-bit little-endian float (double)
+    readDouble(buf, offset) {
+        const view = new DataView(buf.buffer, buf.byteOffset + offset, 8);
+        return { value: view.getFloat64(0, true), offset: offset + 8 };
+    },
+
+    // Decode a 32-bit little-endian float
+    readFloat(buf, offset) {
+        const view = new DataView(buf.buffer, buf.byteOffset + offset, 4);
+        return { value: view.getFloat32(0, true), offset: offset + 4 };
+    },
+
+    // Decode a length-delimited bytes/string field
+    readBytes(buf, offset) {
+        const len = PB.readVarint(buf, offset);
+        offset = len.offset;
+        const bytes = buf.slice(offset, offset + Number(len.value));
+        return { value: bytes, offset: offset + Number(len.value) };
+    },
+
+    readString(buf, offset) {
+        const r = PB.readBytes(buf, offset);
+        return { value: new TextDecoder().decode(r.value), offset: r.offset };
+    },
+
+    // Parse all fields of a protobuf message into an object
+    // Returns { fields: Map<fieldNum, Array<{wire, value}>> }
+    parse(buf) {
+        const fields = new Map();
+        let offset = 0;
+        while (offset < buf.length) {
+            const tag = PB.readVarint(buf, offset);
+            offset = tag.offset;
+            const fieldNum = Number(tag.value >> 3n);
+            const wireType = Number(tag.value & 7n);
+
+            let value, r;
+            if (wireType === 0) {         // varint
+                r = PB.readVarint(buf, offset);
+                value = r.value; offset = r.offset;
+            } else if (wireType === 1) {  // 64-bit
+                r = PB.readDouble(buf, offset);
+                value = r.value; offset = r.offset;
+            } else if (wireType === 2) {  // length-delimited
+                r = PB.readBytes(buf, offset);
+                value = r.value; offset = r.offset;
+            } else if (wireType === 5) {  // 32-bit
+                r = PB.readFloat(buf, offset);
+                value = r.value; offset = r.offset;
+            } else {
+                // Unknown wire type — bail to avoid infinite loop
+                break;
+            }
+
+            if (!fields.has(fieldNum)) fields.set(fieldNum, []);
+            fields.get(fieldNum).push({ wire: wireType, value });
+        }
+        return fields;
+    },
+
+    // Helper: get all double values for a repeated field (wire type 1 or packed wire 2)
+    getDoubles(fields, fieldNum) {
+        const entries = fields.get(fieldNum) || [];
+        const out = [];
+        for (const e of entries) {
+            if (e.wire === 1) {
+                out.push(e.value);
+            } else if (e.wire === 2) {
+                // packed doubles
+                const bytes = e.value;
+                for (let i = 0; i + 8 <= bytes.length; i += 8) {
+                    const view = new DataView(bytes.buffer, bytes.byteOffset + i, 8);
+                    out.push(view.getFloat64(0, true));
+                }
+            }
+        }
+        return out;
+    },
+
+    getString(fields, fieldNum, fallback = '') {
+        const e = (fields.get(fieldNum) || [])[0];
+        if (!e || e.wire !== 2) return fallback;
+        return new TextDecoder().decode(e.value);
+    },
+
+    getBytes(fields, fieldNum) {
+        const e = (fields.get(fieldNum) || [])[0];
+        return e && e.wire === 2 ? e.value : null;
+    },
+
+    getVarint(fields, fieldNum, fallback = 0n) {
+        const e = (fields.get(fieldNum) || [])[0];
+        return e && e.wire === 0 ? e.value : fallback;
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+//  FORMAT HELPERS
+// ─────────────────────────────────────────────────────────────
+function formatEggAmount(n) {
+    if (n === 0) return '0';
+    const suffixes = [
+        [1e18, 'Q'],  // quintillion
+        [1e15, 'q'],  // quadrillion
+        [1e12, 'T'],  // trillion
+        [1e9,  'B'],  // billion
+        [1e6,  'M'],  // million
+        [1e3,  'K'],  // thousand
+    ];
+    for (const [div, suf] of suffixes) {
+        if (n >= div) {
+            const val = n / div;
+            return (val >= 100 ? val.toFixed(0) : val >= 10 ? val.toFixed(1) : val.toFixed(2)) + suf;
+        }
+    }
+    return n.toFixed(0);
+}
+
+// Parse a human-readable amount string like "2M", "1.5T", "100B" into a number
+function parseAmountString(s) {
+    if (!s) return 0;
+    s = s.trim();
+    const multipliers = { K: 1e3, M: 1e6, B: 1e9, T: 1e12, q: 1e15, Q: 1e18 };
+    const match = s.match(/^([\d.]+)([KMBTqQ])?$/);
+    if (!match) return 0;
+    const num = parseFloat(match[1]);
+    const mult = match[2] ? multipliers[match[2]] : 1;
+    return num * (mult || 1);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  FETCH PLAYER DATA  from Auxbrain API via CORS proxy
+// ─────────────────────────────────────────────────────────────
+
+// Global store for fetched tank data
+let g_tankData = null; // { playerName, fuels: {eggKey: amount}, limits: {eggKey: limit} }
+
+async function fetchPlayerData() {
+    const eiInput = document.getElementById('eiCode');
+    const statusEl = document.getElementById('eiStatus');
+    const fetchBtn = document.getElementById('fetchEiBtn');
+    const tankDisplay = document.getElementById('tankDisplay');
+
+    let eiCode = eiInput.value.trim().toUpperCase();
+    if (!eiCode.startsWith('EI')) eiCode = 'EI' + eiCode;
+
+    if (eiCode.length < 10) {
+        statusEl.textContent = '⚠️ Please enter a valid EI code (e.g. EI1234567890123456).';
+        statusEl.className = 'ei-status error';
+        return;
+    }
+
+    fetchBtn.disabled = true;
+    statusEl.textContent = '⏳ Fetching player data…';
+    statusEl.className = 'ei-status loading';
+    tankDisplay.classList.remove('visible');
+
+    try {
+        // Build EggIncFirstContactRequest protobuf manually
+        // message EggIncFirstContactRequest { rinfo(1), ei_user_id(5), ... }
+        // message BasicRequestInfo { ei_user_id(1), client_version(2), version(3), build(4), platform(5) }
+        const eiBytes = new TextEncoder().encode(eiCode);
+        const clientVersionBytes = new TextEncoder().encode('1.35.5');
+        const buildBytes = new TextEncoder().encode('111334');
+        const platformBytes = new TextEncoder().encode('IOS');
+
+        // Encode BasicRequestInfo (field 1: ei_user_id string, field 2: client_version uint32, field 5: platform string)
+        function encodeVarint(n) {
+            const bytes = [];
+            let v = BigInt(n);
+            do {
+                let b = Number(v & 0x7Fn);
+                v >>= 7n;
+                if (v > 0n) b |= 0x80;
+                bytes.push(b);
+            } while (v > 0n);
+            return new Uint8Array(bytes);
+        }
+
+        function encodeField(fieldNum, wireType, data) {
+            const tag = encodeVarint((fieldNum << 3) | wireType);
+            return concatBytes(tag, data);
+        }
+
+        function encodeLenDelim(fieldNum, bytes) {
+            return concatBytes(encodeField(fieldNum, 2, encodeVarint(bytes.length)), bytes);
+        }
+
+        function concatBytes(...arrays) {
+            const total = arrays.reduce((s, a) => s + a.length, 0);
+            const out = new Uint8Array(total);
+            let off = 0;
+            for (const a of arrays) { out.set(a, off); off += a.length; }
+            return out;
+        }
+
+        // BasicRequestInfo fields: ei_user_id(1), client_version(2 as string "71"), platform(5)
+        const rinfo = concatBytes(
+            encodeLenDelim(1, eiBytes),                                   // ei_user_id
+            encodeLenDelim(2, new TextEncoder().encode('71')),            // client_version (string form used here as varint would be field 2 type uint32)
+            encodeLenDelim(3, clientVersionBytes),                        // version string
+            encodeLenDelim(4, buildBytes),                                // build
+            encodeLenDelim(5, platformBytes)                              // platform
+        );
+
+        // EggIncFirstContactRequest: rinfo(1), ei_user_id(5)
+        const request = concatBytes(
+            encodeLenDelim(1, rinfo),
+            encodeLenDelim(5, eiBytes)
+        );
+
+        const b64 = btoa(String.fromCharCode(...request));
+
+        // Use CORS proxy — try a few options in order
+        const PROXIES = [
+            url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        ];
+        const TARGET = 'https://www.auxbrain.com/ei/first_contact';
+
+        let responseBytes = null;
+        let lastErr = '';
+
+        for (const proxyFn of PROXIES) {
+            const proxyUrl = proxyFn(TARGET);
+            try {
+                const resp = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'data=' + encodeURIComponent(b64),
+                });
+                if (!resp.ok) { lastErr = `HTTP ${resp.status}`; continue; }
+                const text = await resp.text();
+                // The response is base64-encoded AuthenticatedMessage protobuf
+                responseBytes = Uint8Array.from(atob(text.trim()), c => c.charCodeAt(0));
+                break;
+            } catch (e) {
+                lastErr = e.message;
+            }
+        }
+
+        if (!responseBytes) {
+            throw new Error('Could not reach Auxbrain API via proxy. ' + lastErr);
+        }
+
+        // Parse AuthenticatedMessage: { message(1) bytes, code(3) string, ... }
+        const authMsg = PB.parse(responseBytes);
+        const msgBytes = PB.getBytes(authMsg, 1);
+        if (!msgBytes || msgBytes.length === 0) {
+            throw new Error('Empty response from server. Check your EI code.');
+        }
+
+        // Parse EggIncFirstContactResponse: { ei_user_id(1), error_code(3), backup(4) }
+        const fcResp = PB.parse(msgBytes);
+        const errorCode = Number(PB.getVarint(fcResp, 3, 0n));
+        if (errorCode === 2) throw new Error('Player not found. Check your EI code.');
+        if (errorCode !== 0) throw new Error(`Server error code ${errorCode}.`);
+
+        const backupBytes = PB.getBytes(fcResp, 4);
+        if (!backupBytes) throw new Error('No backup data in response.');
+
+        // Parse Backup: { user_name(6), artifacts(13) }
+        const backup = PB.parse(backupBytes);
+        const playerName = PB.getString(backup, 6, eiCode);
+
+        // Parse Backup.Artifacts (field 13): { tank_fuels(9) repeated double, tank_limits(10) repeated double }
+        const artifactsBytes = PB.getBytes(backup, 13);
+        if (!artifactsBytes) throw new Error('No artifact data in backup.');
+
+        const artifacts = PB.parse(artifactsBytes);
+        const tankFuels  = PB.getDoubles(artifacts, 9);   // repeated double tank_fuels
+        const tankLimits = PB.getDoubles(artifacts, 10);  // repeated double tank_limits
+
+        // Build fuel tank map: eggKey → { amount, limit, eggInfo }
+        const fuels = {};
+        const limits = {};
+        TANK_EGG_ORDER.forEach((eggId, idx) => {
+            const info = EGG_TANK_MAP[eggId];
+            if (!info) return;
+            fuels[info.key]  = tankFuels[idx]  ?? 0;
+            limits[info.key] = tankLimits[idx] ?? 0;
+        });
+
+        g_tankData = { playerName, fuels, limits };
+
+        statusEl.textContent = `✅ Loaded data for ${playerName}`;
+        statusEl.className = 'ei-status success';
+
+        renderTankDisplay();
+        updateMissionCountFromTank();
+
+    } catch (err) {
+        statusEl.textContent = '❌ ' + err.message;
+        statusEl.className = 'ei-status error';
+        g_tankData = null;
+    } finally {
+        fetchBtn.disabled = false;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER TANK DISPLAY
+// ─────────────────────────────────────────────────────────────
+function renderTankDisplay() {
+    if (!g_tankData) return;
+    const { playerName, fuels, limits } = g_tankData;
+
+    document.getElementById('tankPlayerName').textContent = `⛽ ${playerName}'s Fuel Tank`;
+
+    const grid = document.getElementById('tankGrid');
+    grid.innerHTML = '';
+
+    TANK_EGG_ORDER.forEach(eggId => {
+        const info = EGG_TANK_MAP[eggId];
+        if (!info) return;
+        const amount = fuels[info.key] || 0;
+        const limit  = limits[info.key] || 0;
+        if (limit === 0 && amount === 0) return; // skip untracked eggs
+
+        const pct = limit > 0 ? Math.min(100, (amount / limit) * 100) : 0;
+        const card = document.createElement('div');
+        card.className = 'tank-egg-card' + (amount > 0 ? ' has-fuel' : '');
+        card.innerHTML = `
+            <img src="${info.icon}" alt="${info.name}" onerror="this.style.display='none'">
+            <div class="tank-egg-amount">${formatEggAmount(amount)}</div>
+            ${limit > 0 ? `<div class="tank-egg-limit">/ ${formatEggAmount(limit)}</div>` : ''}
+            <div class="tank-egg-name">${info.name}</div>
+            <div class="tank-fill-bar-wrap">
+                <div class="tank-fill-bar" style="width:${pct.toFixed(1)}%"></div>
+            </div>`;
+        grid.appendChild(card);
+    });
+
+    document.getElementById('tankDisplay').classList.add('visible');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CALCULATE HOW MANY MISSIONS CAN BE LAUNCHED FROM TANK
+// ─────────────────────────────────────────────────────────────
+function updateMissionCountFromTank() {
+    const countBox = document.getElementById('missionCountBox');
+    if (!g_tankData) { countBox.style.display = 'none'; return; }
+
+    const shipIdx    = document.getElementById('shipSelect').value;
+    const missionIdx = document.getElementById('missionSelect').value;
+    if (shipIdx === '' || missionIdx === '') {
+        countBox.style.display = 'none';
+        return;
+    }
+
+    const ship = SHIPS[shipIdx];
+    const m    = ship.missions[missionIdx];
+    const fuelsRequired = m.fuels || [];
+
+    if (fuelsRequired.length === 0) {
+        countBox.style.display = 'none';
+        return;
+    }
+
+    const { fuels } = g_tankData;
+    let limitingCount = Infinity;
+    const breakdown = [];
+
+    for (const req of fuelsRequired) {
+        const reqAmount = parseAmountString(req.amount);
+        const available = fuels[req.egg] || 0;
+        const possible  = reqAmount > 0 ? Math.floor(available / reqAmount) : Infinity;
+        if (possible < limitingCount) limitingCount = possible;
+        breakdown.push({ egg: req.egg, icon: req.icon, reqAmount, available, possible });
+    }
+
+    const count = isFinite(limitingCount) ? limitingCount : 0;
+
+    document.getElementById('missionCountValue').textContent = count;
+    document.getElementById('missionCountSub').textContent =
+        `for ${ship.name} — ${m.type} missions`;
+
+    const bdEl = document.getElementById('missionFuelBreakdown');
+    bdEl.innerHTML = breakdown.map(b => {
+        const isLimiting = b.possible === limitingCount;
+        const statusClass = isLimiting ? 'mission-fuel-limiting' : 'mission-fuel-ok';
+        const statusText  = isLimiting ? '⚠ limiting' : '✓ ok';
+        return `<div class="mission-fuel-row">
+            <div class="mission-fuel-egg">
+                <img src="${b.icon}" alt="${b.egg}">
+                <span>${formatEggAmount(b.available)} / ${formatEggAmount(b.reqAmount)} req</span>
+            </div>
+            <span class="${statusClass}">${statusText} (${b.possible}× possible)</span>
+        </div>`;
+    }).join('');
+
+    countBox.style.display = 'block';
 }
 
 // ─────────────────────────────────────────────────────────────
