@@ -978,6 +978,7 @@ function onShipChange() {
     missionSel.innerHTML = '<option value="">— Choose mission —</option>';
     document.getElementById('selectedDuration').innerHTML = '';
 
+    saveState();
     if (shipIdx === '') return;
 
     // Reset star slider for new ship
@@ -1111,6 +1112,7 @@ function onMissionChange() {
 
     // Recalculate tank mission count whenever ship/mission changes
     updateMissionCountFromTank();
+    saveState();
 }
 
 function onFTLFullyResearched() {
@@ -1788,9 +1790,58 @@ function updateMissionCountFromTank() {
 // ─────────────────────────────────────────────────────────────
 //  Init
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  PERSISTENCE  (localStorage)
+// ─────────────────────────────────────────────────────────────
+const SAVE_KEYS = ['eiCode','shipSelect','missionSelect','ftlLevel','zeroGLevel','shipStars'];
+
+function saveState() {
+    const state = {};
+    SAVE_KEYS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) state[id] = el.value;
+    });
+    localStorage.setItem('eggincCalc', JSON.stringify(state));
+}
+
+async function restoreState() {
+    const raw = localStorage.getItem('eggincCalc');
+    if (!raw) return;
+    const state = JSON.parse(raw);
+
+    // Ship + mission must be restored in order
+    if (state.shipSelect) {
+        document.getElementById('shipSelect').value = state.shipSelect;
+        onShipChange();
+    }
+    if (state.missionSelect) {
+        document.getElementById('missionSelect').value = state.missionSelect;
+        onMissionChange();
+    }
+
+    // Upgrades & stars
+    ['ftlLevel','zeroGLevel','shipStars'].forEach(id => {
+        if (state[id] !== undefined) document.getElementById(id).value = state[id];
+    });
+    if (state.ftlLevel || state.zeroGLevel || state.shipStars) onUpgradeChange();
+
+    // EI code — restore and auto-fetch if present
+    if (state.eiCode) {
+        document.getElementById('eiCode').value = state.eiCode;
+        await fetchPlayerData();
+    }
+}
+
+// Save on any relevant input change
+SAVE_KEYS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', saveState);
+});
+
 setRandomBackground();
 buildShipDropdown();
 setNow();
+restoreState();
 </script>
 
 </body>
